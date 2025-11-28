@@ -1,0 +1,21 @@
+description: Ultralytics 60_epochs_larger_dataset model trained on new_dataset/data.yaml
+author: Ultralytics
+date: '2025-11-28T11:09:01.164457'
+version: 8.3.228
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: test strip
+args:
+  batch: 1
+  fraction: 1.0
+  half: false
+  int8: false
+  nms: false
+channels: 3
