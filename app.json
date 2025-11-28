@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.TestStripInterpretation"
+      "bundleIdentifier": "com.anonymous.TestStripInterpretation",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow this app to access your camera."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +24,10 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.TestStripInterpretation"
+      "package": "com.anonymous.TestStripInterpretation",
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "output": "static",
