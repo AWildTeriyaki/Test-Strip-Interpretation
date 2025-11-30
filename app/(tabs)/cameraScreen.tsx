@@ -1,24 +1,25 @@
 import NoCameraDeviceError from '@/app/noCameraDeviceError';
 import PhotoButton from '@/components/PhotoButton';
-import { useAppState } from '@react-native-community/hooks';
+import { useForeground } from '@/hooks/useForeground';
 import { useIsFocused } from '@react-navigation/native';
 import * as MediaLibrary from 'expo-media-library';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Camera, useCameraDevice } from 'react-native-vision-camera';
 
 export default function CameraScreen() {
 
     const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+    const [resetCameraView, setResetCameraView] = useState<boolean>(true);
 
     const camera = useRef<Camera>(null);
     const device = useCameraDevice('back');
 
     const isFocused = useIsFocused();
-    const appState = useAppState();
+    const foreground = useForeground();
 
 
-    const isActive = appState === "active" && isFocused;
+    const isActive = foreground && isFocused;
 
     if (device == null) {
         return <NoCameraDeviceError />
@@ -36,45 +37,50 @@ export default function CameraScreen() {
     }
 
     useEffect(() => {
-        if (!permissionResponse?.granted) {
+        if (!permissionResponse) {
             requestPermission();
         }
-    })
+    });
 
+    // setting the isActive prop on the camera component to false does not prevent it from throwing an error when you open another camera app on android
+    // so I decided to unmount the camera completely after the user closes out of the app
+    // the problem with that is that the camera preview wouldn't render at the correct height every time
+    // so I found that waiting half a second and reapplying Styles.absoluteFill every time the user opens the app fixes that
+    // I know it's cursed, "but it works"
     useEffect(() => {
-
-    })
+        if (isActive) {
+            setResetCameraView(false);
+            setTimeout(() => setResetCameraView(true), 500);
+        }
+    }, [isActive])
 
     return (
-        isActive ? (
-            <>
-                <Camera
-                    style={StyleSheet.absoluteFill}
-                    device={device}
-                    isActive={isActive}
-                    ref={camera}
-                    photo={true}
-                />
-                <View style={styles.container}>
-                    <View style={styles.spacer} />
-                    <PhotoButton onPress={takePhoto} />
-                </View>
-            </>) : (
-            <View style={styles.placeholder} />
-        )
+        <View style={StyleSheet.absoluteFill}>
+            {isActive && (<Camera
+                ref={camera}
+                device={device}
+                style={resetCameraView ? styles.camera : styles.placeholder}
+                isActive={isActive}
+                photo={true}
+            />)}
+            <View style={styles.overlay}>
+                <PhotoButton onPress={takePhoto} />
+            </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: "flex-end",
         alignItems: "center",
-        justifyContent: "center",
+        paddingBottom: 40,
     },
-    spacer: {
-        height: 500,
+    camera: {
+        ...StyleSheet.absoluteFillObject,
     },
     placeholder: {
-        flex: 1,
-        backgroundColor: 'black',
+
     },
 });
