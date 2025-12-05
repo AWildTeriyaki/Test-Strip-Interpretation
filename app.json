@@ -57,6 +57,12 @@
             "photo"
           ]
         }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "enableFrameProcessor": true
+        }
       ]
     ],
     "experiments": {

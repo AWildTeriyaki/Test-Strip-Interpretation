@@ -16,10 +16,12 @@ export default function PhotoButton({ onPress }: Props) {
 
 const styles = StyleSheet.create({
     button: {
-        height: 84,
-        width: 84,
-        borderRadius: 42,
-        backgroundColor: "#fff",
+        height: 74,
+        width: 74,
+        borderRadius: 37,
+        backgroundColor: "#d9d9d9ff",
+        borderWidth: 5,
+        borderColor: "#fff",
     }
 });
 
