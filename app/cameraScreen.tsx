@@ -8,22 +8,28 @@ import * as MediaLibrary from 'expo-media-library';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTensorflowModel } from 'react-native-fast-tflite';
-import { Camera, useCameraDevice, useCameraFormat, useFrameProcessor } from 'react-native-vision-camera';
+import { Camera, runAtTargetFps, useCameraDevice, useCameraFormat, useFrameProcessor } from 'react-native-vision-camera';
 import { useResizePlugin } from 'vision-camera-resize-plugin';
 
 type Props = {
     exitButtonPress: () => void;
 }
 
+type Detection = {
+
+}
+
 export default function CameraScreen({ exitButtonPress }: Props) {
 
     // constants
-    const MODEL_FILE = require("@/assets/model/nano.tflite")
-    const FRAME_PROCESSOR_FPS = 5
+    const MODEL_FILE = require("@/assets/model/8n.tflite")
+    const MODEL_INPUT_SIZE = 320
+    const FRAME_PROCESSOR_FPS = 0.3
 
     // state variables
     const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
     const [resetCameraView, setResetCameraView] = useState<boolean>(true);
+    const [captured, setCaptured] = useState<boolean>(false);
     const { resize } = useResizePlugin();
 
     // camera hooks
@@ -60,28 +66,31 @@ export default function CameraScreen({ exitButtonPress }: Props) {
 
     // frame processor things
     const plugin = useTensorflowModel(
-        MODEL_FILE,
-        'android-gpu'
+        MODEL_FILE
     );
 
     const frameProcessor = useFrameProcessor((frame) => {
         'worklet'
+        runAtTargetFps(FRAME_PROCESSOR_FPS, () => {
+            'worklet'
+            if (plugin.state !== 'loaded') {
+                console.log(plugin.state)
+                return;
+            }
 
-        if (plugin.state !== 'loaded') {
-            console.log(plugin.state)
-            return;
-        }
+            const resized = resize(frame, {
+                scale: {
+                    width: MODEL_INPUT_SIZE,
+                    height: MODEL_INPUT_SIZE
+                },
+                pixelFormat: 'rgb',
+                dataType: 'uint8',
+            });
 
-        const resized = resize(frame, {
-            scale: {
-                width: 640,
-                height: 640
-            },
-            pixelFormat: 'rgb',
-            dataType: 'uint8',
+            const outputs = plugin.model.runSync([resized]);
+            const output = outputs[0];
+            console.log(Object.values(output));
         });
-
-        const outputs = plugin.model.runSync([resized]);
 
     }, [])
 
